@@ -1,0 +1,41 @@
+<?php
+
+namespace CSSManager;
+
+use \Cumula\BaseComponent as BaseComponent;
+
+class CSSManager extends BaseComponent {
+	protected $_files;
+	
+	public function __construct() {
+		parent::__construct();
+		
+		$this->_files = array();
+		
+		$this->addEvent('GatherCSSFiles');
+	}
+	
+	public function startup() {
+		$this->addEventListenerTo('Application', 'boot_preprocess', 'gatherCSSFiles');
+	}
+	
+	public function gatherCSSFiles() {
+		$files = &$this->_files;
+		$this->dispatch('GatherCSSFiles', array(), function($file) use (&$files) {
+			if(is_array($file))
+				$files = array_merge($files, $file);
+			else
+				$files[] = $file;
+		});
+		$markup = $this->generateCSS($files);
+		$this->renderContent($markup, 'css');
+	}
+	
+	protected function generateCSS($files) {
+		$output = '';
+		foreach($files as $file) {
+			$output .= "<script src=\"$file\" type=\"text/javascript\"></script>\n";
+		}
+		return $output;
+	}
+}
